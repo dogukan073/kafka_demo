@@ -11,6 +11,17 @@ class Producer:
         self.topic = topic
 
     def kafka_python_producer_sync(self, msg: str):
+        for _ in range(self.size):
+            val = {"msg": msg}
+            val = json.dumps(val).encode("utf-8")
+            future = self.producer.send(topic=self.topic, value=val)
+            result = future.get(timeout=60)
+            print(result)
+            sleep(self.sleep_time)
+
+        self.producer.flush()
+
+    def kafka_python_producer_sync_with_partition(self, msg: str):
         for i in range(self.size):
             val = {"msg": msg}
             val = json.dumps(val).encode("utf-8")
@@ -21,7 +32,10 @@ class Producer:
 
         self.producer.flush()
 
-    def start(self):
+    def start(self, partition: bool = False):
         print("Producer Start")
-        self.kafka_python_producer_sync(msg="kafka")
+        if partition:
+            self.kafka_python_producer_sync_with_partition(msg="kafka")
+        else:
+            self.kafka_python_producer_sync(msg="kafka")
         print("Producer End")
